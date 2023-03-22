@@ -11,6 +11,7 @@ type day struct {
 	temperature       string
 	weatherEvent      string
 	bonusWeatherEvent bool
+	generatedEvent    int
 }
 
 type month struct {
@@ -68,7 +69,7 @@ func generateWeather(mo int, today day) day {
 		}
 	}
 	if eventRoll1 > 16 {
-		//eventRoll3:= rand.Intn(20)+1
+		today.generatedEvent = rand.Intn(20) + 1
 		today.weatherEvent = "Event!"
 	}
 	return today
