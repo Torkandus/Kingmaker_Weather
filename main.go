@@ -6,9 +6,11 @@ import (
 )
 
 type day struct {
-	date        int
-	lightPrecip bool
-	temperature string
+	date              int
+	lightPrecip       bool
+	temperature       string
+	weatherEvent      string
+	bonusWeatherEvent bool
 }
 
 type month struct {
@@ -17,9 +19,11 @@ type month struct {
 	days                    []day
 }
 
-func generateWeather(mo int) (precipitation bool, temperature string) {
+// func generateWeather(mo int) (precipitation bool, temperature string) {
+func generateWeather(mo int, today day) day {
 
 	precipRoll := rand.Intn(20) + 1
+	eventRoll1 := rand.Intn(20) + 1
 	var temperatureRoll int
 	if mo == 11 || mo < 2 || mo > 4 && mo < 8 {
 		temperatureRoll = rand.Intn(20) + 1
@@ -27,31 +31,47 @@ func generateWeather(mo int) (precipitation bool, temperature string) {
 	switch mo {
 	case 11, 0, 1:
 		if precipRoll >= 8 {
-			precipitation = true
+			today.lightPrecip = true
 		}
 		//If it's a winter month, it can be cold. January/Abadius is cold more often.
 		if temperatureRoll >= 18 || (temperatureRoll >= 16 && mo == 0) {
-			temperature = "Mild Cold"
+			today.temperature = "Mild Cold"
 		} else {
-			temperature = "Normal"
+			today.temperature = "Normal"
 		}
 	case 2, 3, 4, 8, 9, 10:
 		if precipRoll >= 15 {
-			precipitation = true
+			today.lightPrecip = true
 		}
-		temperature = "Normal"
+		today.temperature = "Normal"
 	case 5, 6, 7:
 		if precipRoll == 20 {
-			precipitation = true
+			today.lightPrecip = true
 		}
-		//If it's a summer month, it is rarely hot. July/Erastus is warm slightly more often
+		//If it's a summer month, it is rarely hot. July/Erastus is hot slightly more often
+		//Rulebook mentions rarely hot, but gives no numbers. This is my interpretation
+		//where the pattern of the middle month in the season is twice as likely to be extreme
+		//but the chances are overall reduced compared to cold, as it's a fairly northern climate
 		if temperatureRoll >= 20 || (temperatureRoll >= 19 && mo == 6) {
-			temperature = "Mild Heat"
+			today.temperature = "Mild Heat"
 		} else {
-			temperature = "Normal"
+			today.temperature = "Normal"
 		}
 	}
-	return
+	//event generation. Requires 17+ for an event. A 20 is possibly a double event
+	if eventRoll1 < 17 {
+		today.weatherEvent = "None"
+	} else if eventRoll1 == 20 {
+		eventRoll2 := rand.Intn(20) + 1
+		if eventRoll2 > 16 {
+			today.bonusWeatherEvent = true
+		}
+	}
+	if eventRoll1 > 16 {
+		//eventRoll3:= rand.Intn(20)+1
+		today.weatherEvent = "Event!"
+	}
+	return today
 }
 
 func main() {
@@ -79,7 +99,7 @@ func main() {
 		year[i].days = make([]day, daysInMonth[i])
 		for j := 0; j < daysInMonth[i]; j++ {
 			year[i].days[j].date = j + 1
-			year[i].days[j].lightPrecip, year[i].days[j].temperature = generateWeather(i)
+			year[i].days[j] = generateWeather(i, year[i].days[j])
 		}
 	}
 	for i := 0; i < len(year); i++ {
